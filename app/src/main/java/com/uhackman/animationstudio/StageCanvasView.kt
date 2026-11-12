@@ -246,7 +246,7 @@ class StageCanvasView(context: Context, private val controller: EditorController
                     tool == "line" -> controller.execute("add_shape", JSONObject().put("type", "line")
                         .put("x", startX).put("y", startY).put("width", endX - startX)
                         .put("height", endY - startY).put("color", "#F59E0B"))
-                    tool == "draw", "brush" -> {
+                    tool == "draw" || tool == "brush" -> {
                         if (strokePoints.length() > 0) controller.execute("add_shape", JSONObject()
                             .put("type", "stroke").put("x", minOf(startX, endX)).put("y", minOf(startY, endY))
                             .put("width", kotlin.math.abs(endX - startX)).put("height", kotlin.math.abs(endY - startY))
