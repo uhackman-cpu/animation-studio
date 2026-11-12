@@ -221,7 +221,7 @@ class EmbeddedMcpServer(
                     properties.put("value", field("number", "Property value"))
                 }
                 "set_frame" -> properties.put("frame", field("integer", "Frame number"))
-                "set_tool" -> properties.put("tool", field("string", "select, rect, line or draw"))
+                "set_tool" -> properties.put("tool", field("string", "select, rect, line, draw, brush or eraser"))
             }
             tools.put(JSONObject().put("name", name)
                 .put("description", descriptions[name] ?: name).put("inputSchema", schema))
