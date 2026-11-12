@@ -378,7 +378,7 @@ class EditorController(private val context: Context, private val onChanged: () -
             record("Undo / redo", undoOk && redoOk && undoColor == originalColor && redoColor == "#FF0000", "Undo=$undoColor; redo=$redoColor")
             val layerResult = probe.execute("add_layer", JSONObject().put("name", "Test Layer"))
             record("Layer creation", layerResult.optBoolean("success") && probe.state().optJSONArray("layers")?.length() == 2, layerResult.optString("message"))
-            val fileName = "animation-studio-self-test"
+            val fileName = "animation-studio-self-test-" + UUID.randomUUID().toString()
             val saved = probe.execute("save_project", JSONObject().put("name", fileName))
             val file = probe.projectFile(fileName)
             val loaded = probe.execute("load_project", JSONObject().put("name", fileName))
