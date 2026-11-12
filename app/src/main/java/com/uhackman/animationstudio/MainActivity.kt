@@ -19,6 +19,7 @@ class MainActivity : Activity() {
     private lateinit var server: EmbeddedMcpServer
     private lateinit var status: TextView
     private val handler = Handler(Looper.getMainLooper())
+    private var playbackLoopActive = false
 
     private val playbackTick = object : Runnable {
         override fun run() {
@@ -26,6 +27,8 @@ class MainActivity : Activity() {
                 controller.advanceFrame()
                 val delay = 1000L / controller.state().optInt("fps", 30).coerceIn(1, 120)
                 handler.postDelayed(this, delay)
+            } else {
+                playbackLoopActive = false
             }
         }
     }
@@ -55,10 +58,11 @@ class MainActivity : Activity() {
                 if (::stage.isInitialized) stage.invalidate()
                 if (::status.isInitialized) updateStatus()
                 if (::controller.isInitialized) {
-                    if (controller.isPlaying()) {
-                        handler.removeCallbacks(playbackTick)
+                    if (controller.isPlaying() && !playbackLoopActive) {
+                        playbackLoopActive = true
                         handler.post(playbackTick)
-                    } else {
+                    } else if (!controller.isPlaying()) {
+                        playbackLoopActive = false
                         handler.removeCallbacks(playbackTick)
                     }
                 }
