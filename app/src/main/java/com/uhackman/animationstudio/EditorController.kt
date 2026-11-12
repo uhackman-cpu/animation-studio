@@ -37,6 +37,7 @@ class EditorController(private val context: Context, private val onChanged: () -
     fun execute(name: String, args: JSONObject = JSONObject()): JSONObject {
         val result = synchronized(lock) {
             when (name) {
+                "set_active_layer" -> setActiveLayer(args)
                 "get_editor_state" -> JSONObject().put("success", true).put("state", JSONObject(document.toString()))
                 "create_project" -> createProject(args)
                 "save_project" -> saveProject(args)
@@ -291,6 +292,13 @@ class EditorController(private val context: Context, private val onChanged: () -
         if (tool !in setOf("select", "rect", "line", "draw", "brush", "eraser")) return fail("Unsupported tool: $tool")
         document.put("tool", tool)
         return ok("Tool selected").put("tool", tool)
+    }
+
+    private fun setActiveLayer(args: JSONObject): JSONObject {
+        val id = args.optString("layerId")
+        if (findLayer(id) == null) return fail("Layer not found")
+        document.put("activeLayerId", id)
+        return ok("Active layer changed").put("layerId", id)
     }
 
     private fun findLayer(id: String): JSONObject? {
