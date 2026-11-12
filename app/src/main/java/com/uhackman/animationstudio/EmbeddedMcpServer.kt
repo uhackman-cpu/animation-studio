@@ -145,7 +145,7 @@ class EmbeddedMcpServer(
             "get_editor_state", "create_project", "save_project", "load_project",
             "add_layer", "update_layer", "delete_layer", "add_shape", "update_shape",
             "delete_shape", "add_keyframe", "set_frame", "set_tool", "play", "stop",
-            "undo", "redo", "get_screenshot"
+            "undo", "redo", "get_screenshot", "begin_shape_move", "move_shape", "set_active_layer", "run_self_tests"
         )
         val descriptions = mapOf(
             "get_editor_state" to "Read current project, layers, objects, timeline and playback state.",
@@ -165,7 +165,11 @@ class EmbeddedMcpServer(
             "stop" to "Stop timeline playback.",
             "undo" to "Undo the last project edit.",
             "redo" to "Redo the last undone project edit.",
-            "get_screenshot" to "Capture the current canvas as a base64 PNG."
+            "get_screenshot" to "Capture the current canvas as a base64 PNG.",
+            "begin_shape_move" to "Start one undoable object drag.",
+            "move_shape" to "Move an object while dragging.",
+            "set_active_layer" to "Choose the active drawing layer.",
+            "run_self_tests" to "Run built-in editor self-tests without changing the active project."
         )
         val tools = JSONArray()
         for (name in names) {
@@ -203,7 +207,13 @@ class EmbeddedMcpServer(
                     properties.put("property", field("string", "Single property to update"))
                     properties.put("value", field("number", "Value for property"))
                 }
-                "delete_shape" -> properties.put("objectId", field("string", "Object ID"))
+                "delete_shape", "begin_shape_move" -> properties.put("objectId", field("string", "Object ID"))
+                "move_shape" -> {
+                    properties.put("objectId", field("string", "Object ID"))
+                    properties.put("x", field("number", "New X position"))
+                    properties.put("y", field("number", "New Y position"))
+                }
+                "set_active_layer" -> properties.put("layerId", field("string", "Layer ID"))
                 "add_keyframe" -> {
                     properties.put("objectId", field("string", "Object ID"))
                     properties.put("property", field("string", "Animated property"))
@@ -217,6 +227,23 @@ class EmbeddedMcpServer(
                 .put("description", descriptions[name] ?: name).put("inputSchema", schema))
         }
         return JSONObject().put("tools", tools)
+    }
+
+    private fun setActiveLayer(args: JSONObject): JSONObject {
+        val id = args.optString("layerId")
+        if (findLayerForActive(id) == null) return JSONObject().put("success", false).put("error", "Layer not found")
+        controllerSetActiveLayer(id)
+        return JSONObject().put("success", true).put("message", "Active layer changed").put("layerId", id)
+    }
+
+    private fun findLayerForActive(id: String): Boolean {
+        val layers = controller.state().optJSONArray("layers") ?: return false
+        for (i in 0 until layers.length()) if (layers.optJSONObject(i)?.optString("id") == id) return true
+        return false
+    }
+
+    private fun controllerSetActiveLayer(id: String) {
+        controller.execute("set_active_layer", JSONObject().put("layerId", id))
     }
 
     private fun field(type: String, description: String) =
